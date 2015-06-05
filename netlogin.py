@@ -196,7 +196,7 @@ def main():
                 connected_ssids.remove(ssid)
                 continue
             networks[ssid] = {
-                k: replace_url_params(x) for k, x in networks[ssid]}
+                k: replace_url_params(x) for k, x in networks[ssid].items()}
         [login_network(**networks[x]) for x in connected_ssids]
     else:
         if args.network not in networks:
