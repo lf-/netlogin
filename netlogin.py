@@ -131,6 +131,8 @@ def handle_nm_propchanged(obj, **kwargs):
     vprint('Got an accepted PropertiesChanged. Handling network.',
            at_verbosity=4)
     for c in obj['ActiveConnections']:
+        if c.Type != '802-11-wireless':
+            continue
         if c.SpecificObject.__class__.__name__ == 'AccessPoint':
             login_ssid = c.SpecificObject.Ssid
             if login_ssid not in networks:
@@ -138,6 +140,15 @@ def handle_nm_propchanged(obj, **kwargs):
                 continue
             print('Logging into network', login_ssid)
             login_network(**networks[login_ssid])
+
+
+def get_connected_ssids():
+    active_connections = NetworkManager.NetworkManager.ActiveConnections
+    ssids = []
+    for conn in active_connections:
+        if conn.SpecificObject.__class__.__name__ == 'AccessPoint':
+            ssids.append(conn.SpecificObject.Ssid)
+    return ssids
 
 
 def register_signal_handler():
@@ -152,6 +163,9 @@ def main():
     global verbosity
     parse = argparse.ArgumentParser(description='Log into WiFi networks '
                                                 'automatically')
+    parse.add_argument('--listen', '--daemon', '-l',
+                       help='Set up an event listener on NetworkManager and '
+                       'automatically login when connecting')
     parse.add_argument('--network', '-n', help='Log into network '
                                                'provided, without setting '
                                                'an event listener')
@@ -165,10 +179,21 @@ def main():
     if os.path.exists(NETWORK_CONFIG_FILE):
         networks.update(load_config(NETWORK_CONFIG_FILE))
 
-    if not args.network:
+    if args.listen and not args.network:
         register_signal_handler()
         loop = GObject.MainLoop()
         loop.run()
+    elif not (args.listen or args.network):
+        connected_ssids = get_connected_ssids()
+        for ssid in connected_ssids:
+            if ssid not in networks:
+                print('No configuration for network ', ssid, ', skipping',
+                      sep='')
+                # having an unconfigured ssid will be a problem later
+                connected_ssids.remove(ssid)
+                continue
+            networks[ssid] = [replace_url_params(x) for x in networks[ssid]]
+        [login_network(**networks[x]) for x in connected_ssids]
     else:
         if args.network not in networks:
             raise KeyError('No configuration for network: ' + args.network)
