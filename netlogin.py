@@ -63,6 +63,8 @@ def get_mac(interface):
 def replace_string(string, replace_str, replace_func):
     if replace_str in string:
         return string.replace(replace_str, replace_func())
+    else:
+        return string
 
 
 def replace_url_params(url):
@@ -72,7 +74,7 @@ def replace_url_params(url):
         '$mac': get_mac
     }
     # need to replace ap mac, client mac
-    for replacestring, func in replacefuncs:
+    for replacestring, func in replacefuncs.items():
         newurl = replace_string(newurl, replacestring, func)
     return newurl
 
@@ -165,7 +167,8 @@ def main():
                                                 'automatically')
     parse.add_argument('--listen', '--daemon', '-l',
                        help='Set up an event listener on NetworkManager and '
-                       'automatically login when connecting')
+                       'automatically login when connecting',
+                       action='store_true')
     parse.add_argument('--network', '-n', help='Log into network '
                                                'provided, without setting '
                                                'an event listener')
@@ -192,13 +195,15 @@ def main():
                 # having an unconfigured ssid will be a problem later
                 connected_ssids.remove(ssid)
                 continue
-            networks[ssid] = [replace_url_params(x) for x in networks[ssid]]
+            networks[ssid] = {
+                k: replace_url_params(x) for k, x in networks[ssid]}
         [login_network(**networks[x]) for x in connected_ssids]
     else:
         if args.network not in networks:
             raise KeyError('No configuration for network: ' + args.network)
-        networks[args.network] = [
-            replace_url_params(x) for x in networks[args.network]]
+        networks[args.network] = {
+            x: replace_url_params(y) for x, y in networks[args.network].items()
+        }
         if login_network(**networks[args.network]):
             print('Logged into network', args.network, 'successfully')
         else:
