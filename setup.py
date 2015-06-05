@@ -3,7 +3,7 @@ import base64
 
 setuptools.setup(
     name = 'netlogin',
-    version = '0.1',
+    version = '0.2',
     py_modules = ['netlogin'],
 
     author = 'lf',
