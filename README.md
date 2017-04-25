@@ -1,10 +1,10 @@
 # netlogin
 Easy login for captive portal networks
 
-##Configuration
+## Configuration
 By default, configuration is in /etc/netlogin/networks.json and json files in /etc/netlogin/networks.d.
 
-###Format:
+### Format:
 
 	{
 		"$network": {
@@ -18,7 +18,7 @@ By default, configuration is in /etc/netlogin/networks.json and json files in /e
 		}
 	}
 
-##Usage:
+## Usage:
 
   `netlogin [-h] [--network NETWORK] [--listen] [--verbose]`
   
@@ -28,7 +28,7 @@ By default, configuration is in /etc/netlogin/networks.json and json files in /e
   
   Finally, if --listen is passed, this will set an event listener for network changed and automagically log into whatever shows up.
 
-##Installation
+## Installation
 
   python3 setup.py install
 
